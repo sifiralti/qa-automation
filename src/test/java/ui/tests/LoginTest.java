@@ -15,6 +15,6 @@ public class LoginTest extends BaseUiTest {
         login.login("tomsmith", "SuperSecretPassword!");
         SecureAreaPage secure = new SecureAreaPage();
         Assert.assertTrue(secure.successMessage().contains("You logged into a secure area!"));
-        Assert.assertTrue(secure.successMessage().contains("You logged intaaaaasecure area!"));
+
     }
 }
