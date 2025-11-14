@@ -5,20 +5,18 @@ pipeline {
         timestamps()
     }
 
-    // Parametreler (şimdilik sadece ENV)
+    // Parametre (dev / qa / staging)
     parameters {
         choice(
-            name: 'ENV',
-            choices: ['dev', 'qa', 'staging'],
-            description: 'Hangi environment\'a karşı test çalışsın?'
+                name: 'ENV',
+                choices: ['dev', 'qa', 'staging'],
+                description: 'Hangi environmenta karşı test koşulsun?'
         )
     }
 
-    // Jenkins tarafında tanımlı JDK ve Maven isimleri
+    // Jenkins tarafında tanımlı tool isimleri
     tools {
-        // Jenkins -> Manage Jenkins -> Global Tool Configuration
-        // buradaki isimle eşleşmeli
-        jdk 'jdk8'
+        jdk   'jdk8'
         maven 'maven3'
     }
 
@@ -26,42 +24,43 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                // Kodun bulunduğu SCM'den (Git) check-out
+                // Kodu GitHub'dan çek
                 checkout scm
             }
         }
 
-        stage('Build & Test') {
+        stage('Run Tests') {
             steps {
                 script {
-                    // Maven tool yolunu al
-                    def mvnHome = tool 'maven3'
-                    // Windows mu Linux mu diye kontrol
-                    def mvnCmd = isUnix() ? "${mvnHome}/bin/mvn" : "\"${mvnHome}\\bin\\mvn.cmd\""
+                    // Jenkins tool path'leri
+                    def jdkHome  = tool 'jdk8'
+                    def mavenHome = tool 'maven3'
 
-                    // Hedef environment (dev/qa/staging)
-                    def envName = params.ENV ?: 'dev'
-
-                    // Koşacağımız Maven goal
-                    def goals = "clean test -Denv=${envName}"
-
-                    echo "Running: ${mvnCmd} ${goals}"
-
-                    if (isUnix()) {
-                        sh "${mvnCmd} ${goals}"
-                    } else {
-                        bat "${mvnCmd} ${goals}"
+                    withEnv([
+                            "JAVA_HOME=${jdkHome}",
+                            "PATH+MAVEN=${mavenHome}/bin"
+                    ]) {
+                        // ENV parametresiyle testleri çalıştır
+                        bat "mvn clean test -Denv=${params.ENV}"
                     }
                 }
+            }
+        }
+
+        stage('Archive Reports') {
+            steps {
+                // JUnit raporlarını Jenkins'e tanıt
+                junit 'target/surefire-reports/junitreports/TEST-*.xml'
+
+                // HTML + XML raporları arşivle
+                archiveArtifacts artifacts: 'target/surefire-reports/**/*.html, target/surefire-reports/**/*.xml', fingerprint: true
             }
         }
     }
 
     post {
         always {
-            // Test raporlarını topla
-            junit 'target/surefire-reports/*.xml'
-            archiveArtifacts artifacts: 'target/surefire-reports/**', fingerprint: true
+            echo "Pipeline tamamlandı."
         }
     }
 }
