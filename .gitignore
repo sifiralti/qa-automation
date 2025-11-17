@@ -1,13 +1,15 @@
+### Build Directories ###
 target/
-!.mvn/wrapper/maven-wrapper.jar
+build/
+
+# Allow build dirs inside source (Maven default rule exceptions)
 !**/src/main/**/target/
 !**/src/test/**/target/
+!**/src/main/**/build/
+!**/src/test/**/build/
 
 ### IntelliJ IDEA ###
-.idea/modules.xml
-.idea/jarRepositories.xml
-.idea/compiler.xml
-.idea/libraries/
+.idea/
 *.iws
 *.iml
 *.ipr
@@ -27,12 +29,12 @@ target/
 /dist/
 /nbdist/
 /.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
 ### VS Code ###
 .vscode/
 
-### Mac OS ###
+### OS Files ###
 .DS_Store
+
+### AI Tools / Local Tools ###
+.ai-code-tracking.json
